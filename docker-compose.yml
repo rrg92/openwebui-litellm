@@ -1,0 +1,17 @@
+include:
+    - path:
+        - litellm/docker-compose.yml
+
+services:
+  oi:
+    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
+    volumes:
+      - oidata:/app/backend/data
+    ports:
+      - ${OPEN_WEBUI_PORT:-3000}:8080
+    environment:
+        ENABLE_OLLAMA_API: false
+    restart: unless-stopped
+
+volumes:
+  oidata: {}

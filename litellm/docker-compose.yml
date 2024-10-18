@@ -1,0 +1,50 @@
+version: "3.11"
+volumes:
+  prometheus_data:
+  dbdata:
+  
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    volumes:
+        - ./config.yaml:/app/config.yaml
+    command:
+        - "--config=/app/config.yaml"
+    ports:
+      - "4000:4000" 
+    expose:
+      - 4000
+
+ 
+  db:
+    image: postgres:16.4-bullseye
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: litellm
+    volumes:
+        - type: volume
+          source: dbdata
+          target: /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+  
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    expose:
+      - 9090
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+
+
+
+
+# ...rest of your docker-compose config if any
